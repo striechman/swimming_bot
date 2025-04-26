@@ -18,10 +18,10 @@ openai.api_key = os.getenv('OPENAI_API_KEY')
 
 def get_sheet():
     credentials_info = json.loads(os.getenv('GOOGLE_CREDENTIALS_JSON'))
-    creds = Credentials.from_service_account_info(credentials_info)
+    scopes = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
+    creds = Credentials.from_service_account_info(credentials_info, scopes=scopes)
     gc = gspread.authorize(creds)
-    sheet = gc.open('FitnessTracker').sheet1
-    return sheet
+    return gc.open('FitnessTracker').sheet1
 
 def send_whatsapp(message):
     twilio_client.messages.create(body=message, from_=from_whatsapp, to=to_whatsapp)
