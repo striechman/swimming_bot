@@ -1,17 +1,21 @@
-from fastapi import FastAPI, Request
-import openai
 import os
+import json
+import openai
 import gspread
+from fastapi import FastAPI, Request
 from google.oauth2.service_account import Credentials
 from twilio.rest import Client
 from datetime import datetime
-import json
 
 app = FastAPI()
 
-# Load credentials
-credentials_info = json.loads(os.getenv('GOOGLE_CREDENTIALS_JSON'))
+# Load credentials directly from environment variable
+google_creds_json = os.getenv("GOOGLE_CREDENTIALS_JSON")
+if google_creds_json is None:
+    raise Exception("GOOGLE_CREDENTIALS_JSON environment variable not set")
+credentials_info = json.loads(google_creds_json)
 creds = Credentials.from_service_account_info(credentials_info)
+
 gc = gspread.authorize(creds)
 sh = gc.open('FitnessTracker').sheet1
 
@@ -20,10 +24,8 @@ twilio_client = Client(os.getenv('TWILIO_SID'), os.getenv('TWILIO_TOKEN'))
 from_whatsapp = os.getenv('TWILIO_FROM')
 to_whatsapp = os.getenv('TWILIO_TO')
 
-# OpenAI setup
 openai.api_key = os.getenv('OPENAI_API_KEY')
 
-# Function to send WhatsApp message
 def send_whatsapp(message):
     twilio_client.messages.create(body=message, from_=from_whatsapp, to=to_whatsapp)
 
@@ -67,9 +69,9 @@ async def receive_whatsapp(request: Request):
     cells = sh.findall(today)
     if not cells:
         sh.append_row([today, "שחייה קלה", "", "תפריט יומי", "", "", ""])
-        cells = sh.findall(today)
-
-    row = cells[0].row
+        row = cells[0].row
+    else:
+        row = cells[0].row
 
     if body.startswith("אימון"):
         sh.update_cell(row, 3, body[6:])
@@ -80,5 +82,4 @@ async def receive_whatsapp(request: Request):
     elif body.replace(".", "").isdigit():
         sh.update_cell(row, 6, body)
         send_whatsapp("מעולה! נדבר בערב עם פידבק 🙌")
-
     return {"status": "ok"}
