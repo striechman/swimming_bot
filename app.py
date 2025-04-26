@@ -33,4 +33,5 @@ def send_whatsapp(message):
 @app.get("/push/morning")
 async def push_morning():
     today = datetime.now().strftime("%d/%m/%Y")
-    sh.append_row([today, "שחייה קלה", "", "תפריט יומי", "", "", ""_
+       sh.append_row([today, "שחייה קלה", "", "תפריט יומי", "", "", ""])
+
