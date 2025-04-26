@@ -21,7 +21,8 @@ SHEET_ID = "1d8G7Yf66REZjTRvfQ5uWX7F3ybzk5sXSfARSWWsbSso"  # זה ה-ID של ה�
 
 def get_sheet():
     credentials_info = json.loads(os.getenv('GOOGLE_CREDENTIALS_JSON'))
-    creds = Credentials.from_service_account_info(credentials_info)
+    scopes = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
+    creds = Credentials.from_service_account_info(credentials_info, scopes=scopes)
     gc = gspread.authorize(creds)
     spreadsheet = gc.open_by_key(SHEET_ID)
     return spreadsheet.sheet1
