@@ -9,119 +9,120 @@ from datetime import datetime
 
 app = FastAPI()
 
-# הגדרות טוויליו
+# קריאה של מפתחות מהסביבה
 twilio_client = Client(os.getenv('TWILIO_SID'), os.getenv('TWILIO_TOKEN'))
 from_whatsapp = os.getenv('TWILIO_FROM')
 to_whatsapp = os.getenv('TWILIO_TO')
-
-# הגדרות OpenAI
 openai.api_key = os.getenv('OPENAI_API_KEY')
 
-# קבועים
-SHEET_ID = os.getenv('SHEET_ID')  # ה-ID של הגוגל שיטס שלך
+# הגדרת הסוכנים
+agents = {
+    "ברי": {
+        "role": "מאמן שחיה וכושר מקצועי",
+        "style": "מקצועי וחברי, מדויק עם זמני אימון, דופק יעד, טכניקה"
+    },
+    "מיכל": {
+        "role": "דיאטנית ספורט",
+        "style": "עוקבת אחרי אוכל, שתייה ומדדים"
+    },
+    "רוני": {
+        "role": "מאמנת מיינדפולנס",
+        "style": "מעבירה מדיטציות קצרות, עידוד חשיבה חיובית"
+    }
+}
 
-# התחברות לשיט
+# פונקציה להתחברות לגוגל שיטס
 def get_sheet():
     credentials_info = json.loads(os.getenv('GOOGLE_CREDENTIALS_JSON'))
     creds = Credentials.from_service_account_info(credentials_info)
     gc = gspread.authorize(creds)
-    return gc.open_by_key(SHEET_ID).sheet1
+    sheet = gc.open_by_key(os.getenv('SHEET_ID')).sheet1
+    return sheet
 
-# שליחת הודעה בוואטסאפ
+# שליחת הודעת וואטסאפ
 def send_whatsapp(message):
     twilio_client.messages.create(body=message, from_=from_whatsapp, to=to_whatsapp)
 
-# זיהוי סוכן לפי התגית
-def detect_agent(message):
-    message = message.lower()
-    if message.startswith("[ברי]"):
-        return "beri"
-    elif message.startswith("[לינוי]"):
-        return "linoy"
-    elif message.startswith("[רוני]"):
-        return "roni"
-    else:
-        return "default"
-
-# תסריטים לכל סוכן
-async def beri_agent(message):
-    sh = get_sheet()
-    today = datetime.now().strftime("%d/%m/%Y")
-    cells = sh.findall(today)
-    if not cells:
-        sh.append_row([today, "", "", "", "", "", ""])
-
-    prompt = f"""
-    אתה מאמן כושר ושחייה בשם ברי. ענה בעברית, בסגנון מקצועי-חברי.
-    היום המשתמש כתב: "{message}"
-    תן לו מענה אמיתי, מקצועי, עם תרגילים מדויקים, סגנונות שחייה, זמנים לכל סט, דופק יעד וכו'.
-    אל תמציא עובדות אלא כתוב טיפים אמיתיים של מאמן.
+# שליחת הודעה מהסוכן המתאים
+def send_agent_message(agent_name, user_message):
+    agent = agents.get(agent_name)
+    if not agent:
+        return "סוכן לא קיים."
+    prompt = f"""אתה {agent['role']} בשם {agent_name}.
+    סגנון הדיבור שלך הוא {agent['style']}.
+    הודעת המשתמש: {user_message}
     """
-
-    res = openai.ChatCompletion.create(
+    response = openai.ChatCompletion.create(
         model="gpt-4o",
-        messages=[{"role": "user", "content": prompt}]
+        messages=[{"role": "user", "content": prompt}],
+        temperature=0.6
     )
+    reply = response['choices'][0]['message']['content'].strip()
+    send_whatsapp(reply)
+    return reply
 
-    feedback = res['choices'][0]['message']['content'].strip()
-    send_whatsapp(f"ברי אומר:\n{feedback}")
-    return {"status": "beri response sent"}
-
-async def linoy_agent(message):
-    prompt = f"""
-    את דיאטנית ספורט בשם לינוי. עני בעברית בסגנון מקצועי וחברי.
-    המשתמש עדכן: "{message}"
-    תני לו משוב אמיתי על תזונה, שתייה, המלצות לאכילה נכונה אחרי אימון, הצעות לארוחות וכו'.
-    """
-
-    res = openai.ChatCompletion.create(
-        model="gpt-4o",
-        messages=[{"role": "user", "content": prompt}]
-    )
-
-    feedback = res['choices'][0]['message']['content'].strip()
-    send_whatsapp(f"לינוי אומרת:\n{feedback}")
-    return {"status": "linoy response sent"}
-
-async def roni_agent(message):
-    prompt = f"""
-    את מאמנת מיינדפולנס בשם רוני. עני בעברית, ברוגע ובחמימות.
-    המשתמש כתב: "{message}"
-    תני לו תרגילי נשימה, הרפיה, מדיטציה קצרה ל-5 דקות, משפטי השראה.
-    """
-
-    res = openai.ChatCompletion.create(
-        model="gpt-4o",
-        messages=[{"role": "user", "content": prompt}]
-    )
-
-    feedback = res['choices'][0]['message']['content'].strip()
-    send_whatsapp(f"רוני אומרת:\n{feedback}")
-    return {"status": "roni response sent"}
-
-# דחיפת הודעה יומית בבוקר
+# נקודת פתיחה - דחיפת בוקר
 @app.get("/push/morning")
 async def push_morning():
-    sh = get_sheet()
+    sheet = get_sheet()
     today = datetime.now().strftime("%d/%m/%Y")
-    sh.append_row([today, "שחייה קלה", "", "תפריט יומי", "", "", ""])
-    send_whatsapp("🌅 בוקר טוב! ברוך הבא ליום חדש! היום: שחייה קלה. זכרו לאכול נכון ולשתות מים.")
+    sheet.append_row([today, "שחייה קלה", "", "תפריט יומי", "", "", ""])
+    send_agent_message("ברי", "כתוב לי הודעת בוקר עם תכנית אימון ליום כולל זמני תרגילים ודופק יעד")
     return {"status": "morning push sent"}
 
-# קבלת הודעות מוואטסאפ
+# נקודת פתיחה - דחיפת ערב
+@app.get("/push/night")
+async def push_night():
+    sheet = get_sheet()
+    today = datetime.now().strftime("%d/%m/%Y")
+    cells = sheet.findall(today)
+    if not cells:
+        return {"error": "No row for today"}
+    row = cells[0].row
+    vals = sheet.row_values(row)
+
+    prompt = f"""
+    סכם את האימון של ערן:
+    אימון: {vals[2]}
+    תזונה: {vals[4]}
+    מים: {vals[5]} ליטר
+    תן לו פידבק בעברית, מקצועי, חברי ומוטיבציוני.
+    """
+    response = openai.ChatCompletion.create(
+        model="gpt-4o",
+        messages=[{"role": "user", "content": prompt}]
+    )
+    feedback = response['choices'][0]['message']['content'].strip()
+    sheet.update_cell(row, 7, feedback)
+    send_whatsapp(feedback)
+    return {"status": "night feedback sent"}
+
+# קבלת הודעות משתמש
 @app.post("/wa")
 async def receive_whatsapp(request: Request):
+    sheet = get_sheet()
     form = await request.form()
     body = form.get('Body').strip()
 
-    agent = detect_agent(body)
+    today = datetime.now().strftime("%d/%m/%Y")
+    cells = sheet.findall(today)
+    if not cells:
+        sheet.append_row([today, "שחייה קלה", "", "תפריט יומי", "", "", ""])
+    row = cells[0].row
 
-    if agent == "beri":
-        return await beri_agent(body[5:].strip())
-    elif agent == "linoy":
-        return await linoy_agent(body[6:].strip())
-    elif agent == "roni":
-        return await roni_agent(body[6:].strip())
+    # זיהוי למי ההודעה מיועדת
+    body_lower = body.lower()
+    if "ברי" in body_lower:
+        clean_msg = body.replace("ברי", "").strip()
+        reply = send_agent_message("ברי", clean_msg)
+    elif "מיכל" in body_lower:
+        clean_msg = body.replace("מיכל", "").strip()
+        reply = send_agent_message("מיכל", clean_msg)
+    elif "רוני" in body_lower:
+        clean_msg = body.replace("רוני", "").strip()
+        reply = send_agent_message("רוני", clean_msg)
     else:
-        send_whatsapp("❓ אנא תתחיל את ההודעה בתגית מתאימה: [ברי] או [לינוי] או [רוני]")
-        return {"status": "unknown agent"}
+        send_whatsapp("בבקשה תתייג את הסוכן: ברי, מיכל או רוני.")
+        return {"status": "tag missing"}
+
+    return {"reply": reply}
