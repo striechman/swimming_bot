@@ -1,18 +1,8 @@
 {
   "build": {
-    "builder": "nixpacks",
-    "nixpacksPlan": {
-      "phases": {
-        "setup": {
-          "nixPkgs": ["python311Full"]
-        },
-        "install": {
-          "cmds": ["pip install -r requirements.txt"]
-        },
-        "start": {
-          "cmds": ["uvicorn app:app --host 0.0.0.0 --port 8000"]
-        }
-      }
-    }
+    "command": "pip install --upgrade pip && pip install -r requirements.txt"
+  },
+  "deploy": {
+    "command": "uvicorn app:app --host 0.0.0.0 --port 8000"
   }
 }
