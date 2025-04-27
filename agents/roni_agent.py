@@ -53,3 +53,15 @@ def roni_send_evening_relaxation_tip():
         "לילה טוב ערן! 😴"
     )
     send_whatsapp(message)
+
+def roni_send_mindfulness_exercise():
+    """שליחת תרגיל מיינדפולנס קצר (בלילה למשל)"""
+    message = (
+        "🌙 תרגיל רוגע לפני שינה:\n"
+        "1. קח נשימה עמוקה לאט דרך האף.\n"
+        "2. החזק 3 שניות.\n"
+        "3. נשוף באיטיות דרך הפה.\n"
+        "חזור על זה 5 פעמים.\n"
+        "לילה רגוע ונפלא, ערן! 🌟"
+    )
+    send_whatsapp(message)
