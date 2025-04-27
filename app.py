@@ -1,10 +1,13 @@
+from dotenv import load_dotenv
+load_dotenv()
+
 from fastapi import FastAPI, Request
 import openai
 import os
 import gspread
 import json
 from google.oauth2.service_account import Credentials
-from twilio.rest import Client
+from apscheduler.schedulers.background import BackgroundScheduler
 from datetime import datetime
 
 # ייבוא סוכנים ומנהל
@@ -22,28 +25,22 @@ from agents.roni_agent import (
     roni_send_mindfulness_exercise
 )
 
-# ייבוא שליחת וואטסאפ
+# שליחת וואטסאפ
 from utils.whatsapp import send_whatsapp
 
 # ---- התחלה ----
 
 app = FastAPI()
 
-twilio_client = Client(os.getenv('TWILIO_SID'), os.getenv('TWILIO_TOKEN'))
-from_whatsapp = os.getenv('TWILIO_FROM')
-to_whatsapp = os.getenv('TWILIO_TO')
 openai.api_key = os.getenv('OPENAI_API_KEY')
 
 def get_sheet():
-    credentials_info = json.loads(os.getenv('GOOGLE_CREDENTIALS_JSON'))
+    with open(os.getenv('GOOGLE_CREDENTIALS_JSON_PATH'), 'r') as f:
+        credentials_info = json.load(f)
     creds = Credentials.from_service_account_info(credentials_info)
     gc = gspread.authorize(creds)
     return gc.open_by_key(os.getenv('SHEET_ID')).sheet1
 
-# ---- שליחת הודעה בוואטסאפ ----
-
-def send_whatsapp(message):
-    twilio_client.messages.create(body=message, from_=from_whatsapp, to=to_whatsapp)
 
 # ---- מסלולים ----
 
@@ -145,7 +142,6 @@ async def send_michal_request():
     return {"status": "Water and food request sent"}
 
 # ---- תזמונים ----
-from apscheduler.schedulers.background import BackgroundScheduler
 
 scheduler = BackgroundScheduler()
 

@@ -3,5 +3,7 @@ uvicorn
 openai
 gspread
 google-auth
+google-auth-oauthlib
 python-dotenv
 twilio
+apscheduler
