@@ -15,8 +15,7 @@ from agents.michal_agent import (
     michal_send_water_reminder,
     michal_log_water_intake,
     michal_daily_nutrition_tip,
-    michal_request_water_and_food,
-    michal_weekly_summary
+    michal_request_water_and_food
 )
 from agents.roni_agent import (
     roni_generate_response,
@@ -41,7 +40,8 @@ def get_sheet():
     gc = gspread.authorize(creds)
     return gc.open_by_key(os.getenv('SHEET_ID')).sheet1
 
-# שליחת הודעת וואטסאפ
+# ---- שליחת הודעה בוואטסאפ ----
+
 def send_whatsapp(message):
     twilio_client.messages.create(body=message, from_=from_whatsapp, to=to_whatsapp)
 
@@ -143,12 +143,6 @@ async def send_michal_tip():
 async def send_michal_request():
     michal_request_water_and_food()
     return {"status": "Water and food request sent"}
-
-# סיכום שבועי ממיכל
-@app.get("/push/michal-summary")
-async def send_michal_summary():
-    michal_weekly_summary()
-    return {"status": "Weekly summary request sent"}
 
 # ---- תזמונים ----
 from apscheduler.schedulers.background import BackgroundScheduler
