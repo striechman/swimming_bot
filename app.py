@@ -7,8 +7,7 @@ import os
 import gspread
 import json
 from google.oauth2.service_account import Credentials
-from apscheduler.schedulers.background import BackgroundScheduler
-from datetime import datetime
+
 
 # ייבוא סוכנים ומנהל
 from manager import route_message_to_agent
@@ -91,6 +90,11 @@ async def chat_with_roni(request: Request):
     reply = roni_generate_response(user_message)
     send_whatsapp(reply)
     return {"reply": reply}
+@app.get("/push/roni-exercise")
+async def send_roni_exercise():
+    roni_send_mindfulness_exercise()
+    return {"status": "Mindfulness exercise sent"}
+
 
 # דחיפת בוקר
 @app.get("/push/morning")
