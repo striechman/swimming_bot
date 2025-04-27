@@ -1,1 +1,19 @@
-credentials.json
+# Ignore environment variables
+.env
+
+# Python compiled files
+__pycache__/
+*.py[cod]
+
+# Virtual environment folders
+venv/
+env/
+
+# Mac system files
+.DS_Store
+
+# VSCode settings
+.vscode/
+
+# Railway files (local metadata)
+railway.json
