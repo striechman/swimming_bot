@@ -1,6 +1,26 @@
-.env
+# Ignore Python cache
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
+
+# Ignore environment files
+.env
+*.env
+
+# Ignore credentials
 google_credentials.json
 credentials.json
-bfg-1.14.0.jar
+
+# Ignore system files
+*.DS_Store
+
+# Ignore virtual environments
+venv/
+.env/
+.venv/
+
+# Ignore build artifacts
+build/
+dist/
+*.egg-info/
