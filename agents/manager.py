@@ -5,6 +5,7 @@ from agents.michal_agent import michal_generate_response
 from agents.roni_agent import roni_generate_response
 
 def route_message_to_agent(message_body: str):
+    """ מנתב את ההודעה לסוכן המתאים """
     body_lower = message_body.lower()
 
     if "ברי" in body_lower:
@@ -20,4 +21,4 @@ def route_message_to_agent(message_body: str):
         return roni_generate_response(clean_msg)
     
     else:
-        return "בבקשה תתייג את הסוכן: ברי, מיכל או רוני."
+        return "בבקשה תתייג את אחד הסוכנים: ברי, מיכל או רוני."
