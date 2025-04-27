@@ -1,20 +1,2 @@
-# Ignore environment variables
+google_credentials.json
 .env
-credentials.json
-
-# Python compiled files
-__pycache__/
-*.py[cod]
-
-# Virtual environment folders
-venv/
-env/
-
-# Mac system files
-.DS_Store
-
-# VSCode settings
-.vscode/
-
-# Railway files (local metadata)
-railway.json
