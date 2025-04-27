@@ -8,6 +8,11 @@ import gspread
 import json
 from datetime import datetime
 from google.oauth2.service_account import Credentials
+import uvicorn
+
+if __name__ == "__main__":
+    port = int(os.getenv("PORT", 8000))
+    uvicorn.run(app, host="0.0.0.0", port=port)
 
 # ייבוא סוכנים ומנהל
 from manager import route_message_to_agent
