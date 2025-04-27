@@ -39,11 +39,11 @@ openai.api_key = os.getenv('OPENAI_API_KEY')
 
 
 def get_sheet():
-    with open(os.getenv('GOOGLE_CREDENTIALS_JSON_PATH')) as f:
-        credentials_info = json.load(f)
-        creds = Credentials.from_service_account_info(credentials_info)
-        gc = gspread.authorize(creds)
-        return gc.open_by_key(os.getenv('SHEET_ID')).sheet1
+    credentials_json = os.getenv('GOOGLE_CREDENTIALS_JSON')
+    credentials_info = json.loads(credentials_json)
+    creds = Credentials.from_service_account_info(credentials_info)
+    gc = gspread.authorize(creds)
+    return gc.open_by_key(os.getenv('SHEET_ID')).sheet1
 
 # ---- מסלולים ----
 
