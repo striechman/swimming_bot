@@ -14,7 +14,6 @@ from manager import route_message_to_agent
 from agents.beri_agent import beri_generate_response
 from agents.michal_agent import (
     michal_generate_response,
-    michal_send_water_reminder,
     michal_log_water_intake,
     michal_daily_nutrition_tip,
     michal_request_water_and_food
