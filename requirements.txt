@@ -1,6 +1,7 @@
 fastapi
 uvicorn
+openai
 gspread
 google-auth
-openai
+python-dotenv
 twilio
