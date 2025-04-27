@@ -8,17 +8,16 @@ from twilio.rest import Client
 from datetime import datetime
 
 # סוכנים
+from manager import route_message_to_agent
 from agents.beri_agent import beri_generate_response
-from agents.michal_agent import (
-    michal_generate_response,
-    michal_send_water_reminder,
-    michal_log_water_intake,
-    michal_send_weekly_summary_request,
+from agents.michal_agent import michal_generate_response, michal_send_water_reminder, michal_log_water_intake
+from agents.michal import (
     michal_daily_nutrition_tip,
     michal_request_water_and_food,
     michal_weekly_summary
 )
 from agents.roni_agent import roni_generate_response
+
 
 app = FastAPI()
 
@@ -162,3 +161,38 @@ async def send_michal_request():
 async def send_michal_summary():
     michal_weekly_summary()
     return {"status": "weekly summary request sent"}
+
+from apscheduler.schedulers.background import BackgroundScheduler
+
+# תזמון של משימות
+scheduler = BackgroundScheduler()
+
+# תזמון שליחת אימון בוקר מברי
+from agents.beri_agent import beri_generate_response
+from utils.whatsapp import send_whatsapp
+
+def send_morning_training():
+    message = beri_generate_response("תכתוב לי הודעת בוקר עם תוכנית אימון מפורטת להיום.")
+    send_whatsapp(message)
+
+# תזמון שליחת תזכורת מים ממיכל
+from agents.michal_agent import michal_send_water_reminder
+
+def send_water_reminder():
+    michal_send_water_reminder()
+
+# תזמון שליחת תרגול נשימה מרוני
+from agents.roni_agent import roni_send_mindfulness_exercise
+
+def send_mindfulness_exercise():
+    roni_send_mindfulness_exercise()
+
+# הגדרת התזמונים
+scheduler.add_job(send_morning_training, 'cron', hour=7, minute=0)     # כל יום ב-07:00 בבוקר
+scheduler.add_job(send_water_reminder, 'cron', hour=10, minute=0)       # כל יום ב-10:00 בבוקר
+scheduler.add_job(send_water_reminder, 'cron', hour=13, minute=0)       # כל יום ב-13:00 בצהריים
+scheduler.add_job(send_water_reminder, 'cron', hour=16, minute=0)       # כל יום ב-16:00
+scheduler.add_job(send_mindfulness_exercise, 'cron', hour=21, minute=0) # כל יום ב-21:00 בערב
+
+# להתחיל את הסקדולר
+scheduler.start()
