@@ -39,7 +39,7 @@ def michal_generate_response(user_message):
 
 def michal_send_water_reminder():
     """ שולחת תזכורת לשתות מים """
-    message = "תזכורת 💧: אל תשכח לשתות כוס מים (200 מ"ל)! שתית כבר? ענה לי 'שתיתי' או 'לא'."
+message = "תזכורת 💧: אל תשכח לשתות כוס מים (200 מ\"ל)! שתית כבר? ענה לי 'שתיתי' או 'לא'."
     send_whatsapp(message)
 
 def michal_log_water_intake(user_response):

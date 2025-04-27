@@ -1,5 +1,6 @@
 # Ignore environment variables
 .env
+credentials.json
 
 # Python compiled files
 __pycache__/
